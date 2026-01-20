@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Setup Profile — WaterSaver</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; background: #f0f0f0; }
+    .card, .zone {
+      background: white; padding: 1em; margin-bottom: 1em;
+      border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    input, select, button {
+      padding: 0.6em; margin-top: 0.6em; width: 100%;
+      box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc;
+    }
+
+    
+.delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: auto;
+  height: auto;
+  font-size: 0.9em;    /* small */
+  font-weight: 200;    /* thin */
+  color: #9e9e9e;      /* grey */
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.delete-btn:hover {
+  color: #e53935;      /* red on hover */
+  font-size: 1.1em;    /* slightly larger */
+  font-weight: 600;    /* bold */
+}
+
+
+    .btn-blue {
+      background: #1e88e5; color: white; border: none; cursor: pointer; font-weight: bold;
+      padding: 0.6em 1.2em; border-radius: 6px;
+    }
+    .btn-blue:hover { background: #1565c0; }
+
+    .btn-grey {
+      background: #546e7a; color: white; border: none; cursor: pointer; font-weight: bold;
+      text-decoration: none; display: inline-block; text-align: center; padding: 0.6em 1.2em; border-radius: 6px;
+    }
+    .btn-grey:hover { background: #333; }
+
+    .top-bar { display: flex; justify-content: flex-end; margin-bottom: 1em; }
+  </style>
+  <script>
+    let zoneCount = 0;
+    const DEFAULT_PRESSURES = {
+      "municipal": 3.0,
+      "borehole": 2.5,
+      "rain_tank": 1.5,
+      "dam_reservoir": 2.0
+    };
+
+    function addZone() {
+      const container = document.getElementById("zones");
+      const zone = document.createElement("div");
+      zone.className = "zone";
+      zone.setAttribute("data-index", zoneCount);
+
+      zone.innerHTML = `
+        <button type="button" class="delete-btn" onclick="removeZone(${zoneCount})">✖</button>
+        <h3>Zone ${zoneCount + 1}</h3>
+        <label>Zone Name:</label>
+        <input type="text" name="name_${zoneCount}" required>
+        <label>Area (m²):</label>
+        <input type="number" step="0.1" name="area_${zoneCount}" required>
+        <label>Number of Sprinklers:</label>
+        <input type="number" name="sprinklers_${zoneCount}" required>
+        <label>Sprinkler Flow Rate (L/min):</label>
+        <input type="number" step="0.01" name="flow_rate_${zoneCount}" required>
+        <label>Water Source:</label>
+        <select name="source_${zoneCount}" onchange="setDefaultPressure(${zoneCount}, this.value)">
+          <option value="municipal">Municipal</option>
+          <option value="borehole">Borehole</option>
+          <option value="rain_tank">Rain Tank</option>
+          <option value="dam_reservoir">Dam/Reservoir</option>
+        </select>
+        <label>Custom Pressure (bar) [optional]:</label>
+        <input type="number" step="0.1" name="custom_pressure_${zoneCount}">
+      `;
+      container.appendChild(zone);
+      zoneCount++;
+      document.getElementById("zone_count").value = zoneCount;
+    }
+
+  function removeZone(index) {
+    const zoneDiv = document.querySelector(`.zone[data-index="${index}"]`);
+    if (zoneDiv) {
+      zoneDiv.remove();
+      // IMPORTANT: do NOT decrement zoneCount.
+      // zoneCount represents the "next index to use", not "how many zones exist".
+      document.getElementById("zone_count").value = zoneCount;
+    }
+  }
+
+  function setDefaultPressure(idx, source) {
+    const input = document.querySelector(`input[name="custom_pressure_${idx}"]`);
+    if (!input) return;
+
+    if (source in DEFAULT_PRESSURES) {
+      input.value = DEFAULT_PRESSURES[source].toFixed(1);
+    } else {
+      input.value = "";
+    }
+  }
+
+    function toggleManualBudget(sel) {
+      document.getElementById("manual_budget").style.display =
+        sel.value === 'manual' ? 'block' : 'none';
+    }
+  </script>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="{{ url_for('login') }}" class="btn-grey">⬅ Back to Login</a>
+  </div>
+
+  <h2>WaterSaver Profile & Zone Setup</h2>
+  <form method="POST">
+    <div class="card">
+      <label>Username:</label>
+      <input type="text" name="username" required>
+
+      <label>Select Your Town:</label>
+      <select name="town" required>
+        {% for town, restriction in towns %}
+          <option value="{{ town }}">{{ town }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Water Budget Option:</label>
+      <select name="budget_option" onchange="toggleManualBudget(this)">
+        <option value="auto">Calculate Recommended Budget</option>
+        <option value="manual">Enter My Monthly Budget (KL)</option>
+      </select>
+
+      <div id="manual_budget" style="display:none;">
+        <label>Monthly Budget (KL):</label>
+        <input type="number" name="manual_budget" step="0.1" min="0">
+      </div>
+    </div>
+
+    <input type="hidden" id="zone_count" name="zone_count" value="0">
+    <div id="zones"></div>
+
+    <button type="button" class="btn-blue" onclick="addZone()">Add Zone</button>
+    <button type="submit" class="btn-blue">Save Setup</button>
+  </form>
+</body>
+</html>

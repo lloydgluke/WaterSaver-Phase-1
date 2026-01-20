@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Zone — WaterSaver</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; background: #f0f0f0; }
+    .card { background: white; padding: 1em; border-radius: 8px; max-width: 600px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    input, select, button { width: 100%; padding: 0.6em; margin-top: 0.4em; }
+  </style>
+</head>
+<body>
+  <h2>Edit Zone</h2>
+  <form method="post" class="card">
+    <label>Name</label>
+    <input type="text" name="name" value="{{ zone.name }}" required>
+    <label>Area (m²)</label>
+    <input type="number" step="0.1" name="area" value="{{ zone.area }}">
+    <label>Sprinklers</label>
+    <input type="number" name="sprinklers" value="{{ zone.sprinklers }}">
+    <label>Flow Rate (L/min)</label>
+    <input type="number" step="0.1" name="flow_rate" value="{{ zone.flow_rate }}">
+    <label>Water Source</label>
+    <select name="source">
+      <option value="municipal" {% if zone.source == 'municipal' %}selected{% endif %}>Municipal</option>
+      <option value="borehole" {% if zone.source == 'borehole' %}selected{% endif %}>Borehole</option>
+      <option value="rain_tank" {% if zone.source == 'rain_tank' %}selected{% endif %}>Rain Tank</option>
+      <option value="dam_reservoir" {% if zone.source == 'dam_reservoir' %}selected{% endif %}>Dam/Reservoir</option>
+    </select>
+    <label>Custom Pressure (bar)</label>
+    <input type="number" step="0.1" name="custom_pressure" value="{{ zone.custom_pressure }}">
+    <button type="submit">Save Changes</button>
+  </form>
+  <p style="text-align:center; margin-top:1em;">
+    <a href="{{ url_for('home') }}">← Back to Dashboard</a>
+  </p>
+</body>
+</html>
